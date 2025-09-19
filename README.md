@@ -7,9 +7,8 @@
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red.svg)
 ![GeoPandas](https://img.shields.io/badge/GeoPandas-0.10+-orange.svg)
 
-*A comprehensive geospatial analysis of hospital accessibility across Peru using official government data*
+*A geospatial analysis of hospital accessibility across Peru using official government data*
 
-[🚀 Live Demo](#getting-started) • [📊 Features](#features) • [🔍 Methodology](#methodology) • [📋 Data Sources](#data-sources)
 
 </div>
 
