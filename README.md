@@ -35,13 +35,22 @@ The analysis includes only **operational public hospitals** based on the followi
 ## 📁 Files Structure
 
 ```
+├── .streamlit/
+│   └── config.toml            # Streamlit configuration
+├── assets/                    # Generated maps and visualizations
+├── data/                      # All datasets
+│   ├── IPRESS.csv            # Hospitals dataset
+│   ├── DISTRITOS.shp         # Districts shapefile
+│   ├── CCPP_IGN100K.shp      # Population centers shapefile
+│   └── ...                   # Additional shapefile components
+├── src/                       # Source code
+│   ├── streamlit_app.py      # Main Streamlit web application
+│   └── utils.py              # Utility functions for data processing
 ├── code.ipynb                 # Main Jupyter notebook with complete analysis
-├── streamlit_app.py          # Streamlit web application
+├── run_app.py                # Streamlit application launcher
 ├── requirements.txt          # Python dependencies
-├── IPRESS.csv               # Hospitals dataset
-├── DISTRITOS.shp            # Districts shapefile
-├── CCPP_IGN100K.shp         # Population centers shapefile
-└── README.md                # This file
+├── LICENSE                   # MIT License
+└── README.md                 # This file
 ```
 
 ## 🚀 Getting Started
@@ -54,10 +63,17 @@ pip install -r requirements.txt
 ### Running the Analysis
 
 1. **Jupyter Notebook**: Open and run `code.ipynb` for the complete analysis
-2. **Streamlit App**: Run the web application
+2. **Streamlit App**: Run the web application from the project root
    ```bash
+   # Option 1: Using the launcher script (Recommended)
+   python run_app.py
+   
+   # Option 2: Direct streamlit command from src directory
+   cd src
    streamlit run streamlit_app.py
    ```
+   
+   The application will start at `http://localhost:8501` by default.
 
 ## 📋 Analysis Components
 
@@ -108,6 +124,8 @@ pip install -r requirements.txt
 
 ## 🛠️ Technical Notes
 
+- **Project Structure**: Professional organization with separate directories for source code, data, and generated assets
+- **Asset Management**: Maps and visualizations are automatically saved to the `assets/` directory
 - **Coordinate System**: EPSG:4326 (WGS84) for consistency
 - **Buffer Analysis**: 10km radius using approximate degree conversion
 - **Spatial Operations**: GeoPandas for spatial joins and analysis

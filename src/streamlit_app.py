@@ -10,6 +10,7 @@ from shapely.geometry import Point
 import warnings
 import plotly.express as px
 import plotly.graph_objects as go
+import os
 from utils import (
     load_and_clean_data,
     filter_operational_hospitals,
