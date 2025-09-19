@@ -112,7 +112,6 @@ Our analysis ensures data quality through rigorous filtering:
 📦 Hospitals-Access-Peru/
 ├── 📂 .streamlit/
 │   └── config.toml              # Streamlit configuration
-├── 📂 assets/                   # Generated visualizations and maps
 ├── 📂 data/                     # Source datasets
 │   ├── IPRESS.csv              # Hospital registry (MINSA)
 │   ├── DISTRITOS.shp           # District boundaries
@@ -121,7 +120,8 @@ Our analysis ensures data quality through rigorous filtering:
 ├── 📂 src/                      # Source code
 │   ├── streamlit_app.py        # Main Streamlit application
 │   └── utils.py                # Utility functions and analysis tools
-├── 📄 code.ipynb               # Complete Jupyter notebook analysis
+├── 📄 geospatial_analysis.ipynb  # Part 1: Geospatial Analysis
+├── 📄 interactive_mapping.ipynb # Part 2: Interactive Mapping
 ├── 📄 run_app.py               # Application launcher
 ├── 📄 requirements.txt         # Python dependencies
 ├── 📄 LICENSE                  # MIT License
@@ -155,8 +155,15 @@ streamlit run streamlit_app.py
 The application will be available at `http://localhost:8501`
 
 #### Option 2: Jupyter Notebook Analysis
+
+**Part 1 - Geospatial Analysis:**
 ```bash
-jupyter notebook code.ipynb
+jupyter notebook geospatial_analysis.ipynb
+```
+
+**Part 2 - Interactive Mapping:**
+```bash
+jupyter notebook interactive_mapping.ipynb
 ```
 
 ### 🌐 Application Modules
