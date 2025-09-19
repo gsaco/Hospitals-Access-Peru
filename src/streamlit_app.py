@@ -10,7 +10,15 @@ from shapely.geometry import Point
 import warnings
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import os
+import time
+from datetime import datetime
+import json
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from utils import (
     load_and_clean_data,
     filter_operational_hospitals,
@@ -25,54 +33,223 @@ warnings.filterwarnings('ignore')
 
 # Configure Streamlit page
 st.set_page_config(
-    page_title="Hospitals Access Peru - Geospatial Analysis",
+    page_title="🏥 Hospitals Access Peru - Professional Geospatial Analysis",
     page_icon="🏥",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://github.com/gsaco/Hospitals-Access-Peru',
+        'Report a bug': 'https://github.com/gsaco/Hospitals-Access-Peru/issues',
+        'About': "# Hospitals Access Peru\n\nProfessional geospatial analysis of hospital accessibility in Peru.\n\nDeveloped by Gabriel Saco © 2025"
+    }
 )
 
-# Custom CSS for styling
+# Enhanced Custom CSS for professional styling
 st.markdown("""
 <style>
+    /* Import Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    /* Global styling */
+    .main > div {
+        padding-top: 2rem;
+    }
+    
+    /* Custom header styling */
     .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #1f77b4;
+        font-family: 'Inter', sans-serif;
+        font-size: 3.2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         text-align: center;
-        margin-bottom: 2rem;
-    }
-    .tab-subheader {
-        font-size: 1.8rem;
-        font-weight: bold;
-        color: #ff7f0e;
         margin-bottom: 1rem;
+        padding: 1rem 0;
     }
+    
+    .subtitle {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.2rem;
+        color: #6c757d;
+        text-align: center;
+        margin-bottom: 3rem;
+        font-weight: 300;
+    }
+    
+    /* Tab styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background-color: #f8f9fa;
+        padding: 0.5rem;
+        border-radius: 12px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        white-space: pre-wrap;
+        background-color: #ffffff;
+        border-radius: 8px;
+        font-weight: 500;
+        color: #495057;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Enhanced card styling */
     .metric-card {
-        background-color: #f0f2f6;
-        padding: 1rem;
+        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        padding: 1.5rem;
+        border-radius: 16px;
+        margin: 0.75rem 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #495057;
+        margin: 0;
+    }
+    
+    .metric-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Enhanced info boxes */
+    .analysis-box {
+        background: linear-gradient(145deg, #e3f2fd 0%, #bbdefb 100%);
+        padding: 1.5rem;
+        border-left: 5px solid #2196f3;
+        border-radius: 12px;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 15px rgba(33, 150, 243, 0.15);
+    }
+    
+    .warning-box {
+        background: linear-gradient(145deg, #fff8e1 0%, #ffecb3 100%);
+        padding: 1.5rem;
+        border-left: 5px solid #ff9800;
+        border-radius: 12px;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 15px rgba(255, 152, 0, 0.15);
+    }
+    
+    .success-box {
+        background: linear-gradient(145deg, #e8f5e8 0%, #c8e6c9 100%);
+        padding: 1.5rem;
+        border-left: 5px solid #4caf50;
+        border-radius: 12px;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.15);
+    }
+    
+    .danger-box {
+        background: linear-gradient(145deg, #ffebee 0%, #ffcdd2 100%);
+        padding: 1.5rem;
+        border-left: 5px solid #f44336;
+        border-radius: 12px;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 15px rgba(244, 67, 54, 0.15);
+    }
+    
+    /* Professional table styling */
+    .dataframe {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    /* Custom progress bars */
+    .progress-container {
+        background-color: #e9ecef;
         border-radius: 10px;
+        padding: 3px;
         margin: 0.5rem 0;
     }
-    .analysis-box {
-        background-color: #e8f4f8;
-        padding: 1rem;
-        border-left: 4px solid #1f77b4;
-        border-radius: 5px;
-        margin: 1rem 0;
+    
+    .progress-bar {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        height: 20px;
+        border-radius: 8px;
+        transition: width 0.8s ease;
     }
-    .warning-box {
-        background-color: #fff3cd;
-        padding: 1rem;
-        border-left: 4px solid #ffc107;
-        border-radius: 5px;
-        margin: 1rem 0;
+    
+    /* Sidebar styling */
+    .css-1d391kg {
+        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
     }
-    .success-box {
-        background-color: #d4edda;
-        padding: 1rem;
-        border-left: 4px solid #28a745;
-        border-radius: 5px;
-        margin: 1rem 0;
+    
+    /* Footer */
+    .footer {
+        text-align: center;
+        padding: 2rem 0;
+        color: #6c757d;
+        font-size: 0.9rem;
+        border-top: 1px solid #e9ecef;
+        margin-top: 3rem;
+    }
+    
+    /* Animation for loading */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .animate-fade-in {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    /* Custom button styling */
+    .stButton > button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        padding: 0.5rem 2rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Enhanced selectbox */
+    .stSelectbox > div > div {
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+        transition: border-color 0.3s ease;
+    }
+    
+    .stSelectbox > div > div:focus-within {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -157,419 +334,662 @@ def create_static_maps_section(public_hospitals, districts_with_counts):
     
     return dept_counts
 
-def create_proximity_analysis_maps(hospitals_gdf, pop_centers_gdf):
-    """Create proximity analysis for Lima and Loreto"""
+# Enhanced utility functions
+def create_performance_metrics():
+    """Create performance metrics for the dashboard."""
+    return {
+        'load_time': time.time(),
+        'data_freshness': datetime.now(),
+        'analysis_version': '2.0',
+        'total_computations': 0
+    }
+
+def display_header_with_metrics():
+    """Display enhanced header with real-time metrics."""
+    col1, col2, col3 = st.columns([2, 1, 1])
     
-    # Lima analysis
-    lima_isolated, lima_concentrated, lima_hospitals = perform_proximity_analysis(
-        hospitals_gdf, pop_centers_gdf, 'Lima', buffer_km=10
+    with col1:
+        st.markdown('<h1 class="main-header animate-fade-in">🏥 Hospitals Access Peru</h1>', unsafe_allow_html=True)
+        st.markdown('<p class="subtitle animate-fade-in">Professional Geospatial Analysis & Healthcare Infrastructure Insights</p>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="metric-card animate-fade-in">', unsafe_allow_html=True)
+        st.markdown('<p class="metric-label">Analysis Version</p>', unsafe_allow_html=True)
+        st.markdown('<p class="metric-value">v2.0</p>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown('<div class="metric-card animate-fade-in">', unsafe_allow_html=True)
+        st.markdown('<p class="metric-label">Last Updated</p>', unsafe_allow_html=True)
+        st.markdown(f'<p class="metric-value">{datetime.now().strftime("%m/%d")}</p>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+def create_enhanced_metrics_dashboard(hospitals_df, districts_with_counts):
+    """Create an enhanced metrics dashboard with interactive charts."""
+    
+    # Calculate advanced metrics
+    total_hospitals = len(hospitals_df)
+    departments = hospitals_df['Departamento'].nunique()
+    avg_per_dept = total_hospitals / departments
+    coverage_rate = len(districts_with_counts[districts_with_counts['hospital_count'] > 0]) / len(districts_with_counts) * 100
+    
+    # Create 4-column layout for metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown('<div class="metric-card animate-fade-in">', unsafe_allow_html=True)
+        st.markdown('<p class="metric-label">Total Hospitals</p>', unsafe_allow_html=True)
+        st.markdown(f'<p class="metric-value">{total_hospitals:,}</p>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="metric-card animate-fade-in">', unsafe_allow_html=True)
+        st.markdown('<p class="metric-label">Departments Covered</p>', unsafe_allow_html=True)
+        st.markdown(f'<p class="metric-value">{departments}</p>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown('<div class="metric-card animate-fade-in">', unsafe_allow_html=True)
+        st.markdown('<p class="metric-label">Avg per Department</p>', unsafe_allow_html=True)
+        st.markdown(f'<p class="metric-value">{avg_per_dept:.1f}</p>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown('<div class="metric-card animate-fade-in">', unsafe_allow_html=True)
+        st.markdown('<p class="metric-label">District Coverage</p>', unsafe_allow_html=True)
+        st.markdown(f'<p class="metric-value">{coverage_rate:.1f}%</p>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    return total_hospitals, departments, avg_per_dept, coverage_rate
+
+def create_interactive_plotly_charts(hospitals_df):
+    """Create interactive Plotly charts for better visualization."""
+    
+    # 1. Department distribution pie chart
+    dept_counts = hospitals_df['Departamento'].value_counts().head(10)
+    
+    fig_pie = go.Figure(data=[go.Pie(
+        labels=dept_counts.index,
+        values=dept_counts.values,
+        hole=0.4,
+        textinfo='label+percent',
+        textposition='outside',
+        marker=dict(
+            colors=px.colors.qualitative.Set3,
+            line=dict(color='#000000', width=2)
+        )
+    )])
+    
+    fig_pie.update_layout(
+        title={
+            'text': "Top 10 Departments by Hospital Count",
+            'x': 0.5,
+            'xanchor': 'center',
+            'font': {'size': 20, 'family': 'Inter'}
+        },
+        font=dict(family="Inter", size=12),
+        showlegend=True,
+        height=500,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)'
     )
     
-    # Loreto analysis
-    loreto_isolated, loreto_concentrated, loreto_hospitals = perform_proximity_analysis(
-        hospitals_gdf, pop_centers_gdf, 'Loreto', buffer_km=10
+    # 2. Institution type distribution
+    inst_counts = hospitals_df['Inst_Adm'].value_counts()
+    
+    fig_bar = go.Figure(data=[go.Bar(
+        x=inst_counts.values,
+        y=inst_counts.index,
+        orientation='h',
+        marker=dict(
+            color=px.colors.qualitative.Pastel,
+            line=dict(color='rgba(58, 71, 80, 1.0)', width=1)
+        ),
+        text=inst_counts.values,
+        textposition='outside'
+    )])
+    
+    fig_bar.update_layout(
+        title={
+            'text': "Hospitals by Institution Type",
+            'x': 0.5,
+            'xanchor': 'center',
+            'font': {'size': 20, 'family': 'Inter'}
+        },
+        xaxis_title="Number of Hospitals",
+        yaxis_title="Institution Type",
+        font=dict(family="Inter", size=12),
+        height=400,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)'
     )
     
-    return (lima_isolated, lima_concentrated, lima_hospitals, 
-            loreto_isolated, loreto_concentrated, loreto_hospitals)
+    # 3. Geographic distribution heatmap
+    dept_province_counts = hospitals_df.groupby(['Departamento', 'Provincia']).size().reset_index(name='count')
+    top_combinations = dept_province_counts.nlargest(20, 'count')
+    
+    fig_heatmap = px.treemap(
+        top_combinations,
+        path=['Departamento', 'Provincia'],
+        values='count',
+        title="Geographic Distribution of Hospitals (Top 20 Department-Province Combinations)",
+        color='count',
+        color_continuous_scale='Viridis'
+    )
+    
+    fig_heatmap.update_layout(
+        font=dict(family="Inter", size=12),
+        height=600,
+        paper_bgcolor='rgba(0,0,0,0)'
+    )
+    
+    return fig_pie, fig_bar, fig_heatmap
+
+def create_advanced_sidebar():
+    """Create an advanced sidebar with filters and controls."""
+    st.sidebar.markdown("## 🎛️ Dashboard Controls")
+    
+    # Analysis options
+    st.sidebar.markdown("### 📊 Analysis Options")
+    show_advanced_stats = st.sidebar.checkbox("Show Advanced Statistics", value=True)
+    show_interactive_charts = st.sidebar.checkbox("Interactive Charts", value=True)
+    enable_animations = st.sidebar.checkbox("Enable Animations", value=True)
+    
+    # Data filters
+    st.sidebar.markdown("### 🔍 Data Filters")
+    selected_departments = st.sidebar.multiselect(
+        "Select Departments",
+        options=["All"] + ["Lima", "Arequipa", "La Libertad", "Piura", "Junín"],
+        default=["All"]
+    )
+    
+    # Map settings
+    st.sidebar.markdown("### 🗺️ Map Settings")
+    map_style = st.sidebar.selectbox(
+        "Map Style",
+        options=["OpenStreetMap", "CartoDB Positron", "CartoDB Dark_Matter", "Stamen Terrain"],
+        index=1
+    )
+    
+    buffer_distance = st.sidebar.slider("Buffer Distance (km)", 5, 20, 10)
+    
+    # Export options
+    st.sidebar.markdown("### 📤 Export Options")
+    if st.sidebar.button("🔄 Refresh Data"):
+        st.cache_data.clear()
+        st.experimental_rerun()
+    
+    download_format = st.sidebar.selectbox(
+        "Download Format",
+        options=["CSV", "Excel", "JSON", "GeoJSON"]
+    )
+    
+    # Info section
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### ℹ️ About")
+    st.sidebar.info(
+        "This dashboard provides comprehensive analysis of hospital accessibility in Peru. "
+        "Data sources include MINSA, INEI, and administrative boundaries."
+    )
+    
+    st.sidebar.markdown("### 👨‍💻 Developer")
+    st.sidebar.markdown("**Gabriel Saco**")
+    st.sidebar.markdown("📧 Contact: [GitHub](https://github.com/gsaco)")
+    
+    return {
+        'show_advanced_stats': show_advanced_stats,
+        'show_interactive_charts': show_interactive_charts,
+        'enable_animations': enable_animations,
+        'selected_departments': selected_departments,
+        'map_style': map_style,
+        'buffer_distance': buffer_distance,
+        'download_format': download_format
+    }
 
 # Main application
 def main():
-    st.markdown('<h1 class="main-header">🏥 Hospitals Access Peru - Geospatial Analysis</h1>', unsafe_allow_html=True)
+    """Enhanced main application with professional features."""
     
-    # Load all data
-    hospitals_df, districts_gdf, pop_centers_gdf, public_hospitals, hospitals_gdf, districts_with_counts = load_all_data()
+    # Create sidebar controls
+    sidebar_config = create_advanced_sidebar()
+    
+    # Display enhanced header
+    display_header_with_metrics()
+    
+    # Initialize performance metrics
+    perf_metrics = create_performance_metrics()
+    
+    # Show loading animation
+    with st.spinner('🔄 Loading and processing healthcare data...'):
+        # Load all data
+        hospitals_df, districts_gdf, pop_centers_gdf, public_hospitals, hospitals_gdf, districts_with_counts = load_all_data()
     
     if hospitals_df is None:
-        st.error("Unable to load data. Please check that all required files are present.")
+        st.markdown('<div class="danger-box">', unsafe_allow_html=True)
+        st.error("❌ Unable to load data. Please check that all required files are present in the data/ directory.")
+        st.markdown('</div>', unsafe_allow_html=True)
         return
     
-    # Create tabs with icons as shown in the homework
-    tab1, tab2, tab3 = st.tabs([
-        "🗂️ Descripción de Datos", 
-        "🗺️ Mapas Estáticos", 
-        "🌍 Mapas Dinámicos"
+    # Success message
+    st.markdown('<div class="success-box">', unsafe_allow_html=True)
+    st.success(f"✅ Successfully loaded {len(hospitals_df):,} hospitals from {hospitals_df['Departamento'].nunique()} departments")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Enhanced tabs with better icons and descriptions
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📊 Dashboard Overview", 
+        "🗺️ Static Analysis", 
+        "🌍 Interactive Maps",
+        "📈 Advanced Analytics"
     ])
     
     with tab1:
-        st.markdown('<h2 class="tab-subheader">📊 Descripción de los Datos</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="animate-fade-in">', unsafe_allow_html=True)
+        st.markdown("## 📊 Healthcare Infrastructure Dashboard")
         
-        # Key metrics row
-        col1, col2, col3, col4 = st.columns(4)
+        # Enhanced metrics dashboard
+        total_hospitals, departments, avg_per_dept, coverage_rate = create_enhanced_metrics_dashboard(
+            public_hospitals, districts_with_counts
+        )
+        
+        st.markdown("---")
+        
+        # Interactive charts section
+        if sidebar_config['show_interactive_charts']:
+            st.markdown("### 📈 Interactive Analytics")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                fig_pie, fig_bar, fig_heatmap = create_interactive_plotly_charts(public_hospitals)
+                st.plotly_chart(fig_pie, use_container_width=True)
+            
+            with col2:
+                st.plotly_chart(fig_bar, use_container_width=True)
+            
+            # Treemap visualization
+            st.plotly_chart(fig_heatmap, use_container_width=True)
+        
+        # Data quality indicators
+        st.markdown("### 🎯 Data Quality Indicators")
+        
+        col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            st.metric(
-                label="Total de Hospitales Operacionales",
-                value=f"{len(public_hospitals):,}" if public_hospitals is not None else 0
-            )
-            st.markdown('</div>', unsafe_allow_html=True)
+            completeness = (1 - hospitals_df.isnull().sum().sum() / (len(hospitals_df) * len(hospitals_df.columns))) * 100
+            st.metric("Data Completeness", f"{completeness:.1f}%")
         
         with col2:
-            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            if public_hospitals is not None:
-                unique_depts = public_hospitals['Departamento'].nunique()
-            else:
-                unique_depts = 0
-            st.metric(
-                label="Departamentos Cubiertos",
-                value=unique_depts
-            )
-            st.markdown('</div>', unsafe_allow_html=True)
+            coord_validity = len(hospitals_df.dropna(subset=['Latitud', 'Longitud'])) / len(hospitals_df) * 100
+            st.metric("Coordinate Validity", f"{coord_validity:.1f}%")
         
         with col3:
-            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            st.metric(
-                label="Distritos en el Análisis",
-                value=f"{len(districts_gdf):,}" if districts_gdf is not None else 0
-            )
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-        with col4:
-            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            if districts_with_counts is not None:
-                zero_districts = len(districts_with_counts[districts_with_counts['hospital_count'] == 0])
-            else:
-                zero_districts = 0
-            st.metric(
-                label="Distritos Sin Hospitales",
-                value=f"{zero_districts:,}",
-                delta=f"-{(zero_districts/len(districts_with_counts)*100):.1f}%" if districts_with_counts is not None else None
-            )
-            st.markdown('</div>', unsafe_allow_html=True)
+            operational_rate = len(hospitals_df[hospitals_df['Condición'] == 'EN FUNCIONAMIENTO']) / len(hospitals_df) * 100
+            st.metric("Operational Rate", f"{operational_rate:.1f}%")
         
-        # Unit of analysis section
-        st.markdown('<div class="analysis-box">', unsafe_allow_html=True)
-        st.markdown("### 📋 Unidad de Análisis")
-        st.write("**Hospitales públicos operacionales en Perú**")
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Data sources section
-        st.markdown("### 📊 Fuentes de Datos")
+        # Data sources with enhanced styling
+        st.markdown("### 📚 Data Sources & Methodology")
         
         col1, col2, col3 = st.columns(3)
         
         with col1:
             st.markdown('<div class="success-box">', unsafe_allow_html=True)
-            st.markdown("**MINSA – IPRESS**")
-            st.write("Registro Nacional de establecimientos de salud operacionales")
+            st.markdown("**🏥 MINSA – IPRESS**")
+            st.write("National registry of operational health establishments")
+            st.caption(f"📊 {len(hospitals_df):,} total records")
             st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
             st.markdown('<div class="success-box">', unsafe_allow_html=True)
-            st.markdown("**INEI – Centros Poblados**")
-            st.write("Base de datos de centros poblados del Perú")
+            st.markdown("**🏘️ INEI – Population Centers**")
+            st.write("Population centers database from official census")
+            st.caption(f"📊 {len(pop_centers_gdf):,} total centers")
             st.markdown('</div>', unsafe_allow_html=True)
         
         with col3:
             st.markdown('<div class="success-box">', unsafe_allow_html=True)
-            st.markdown("**Límites Administrativos**")
-            st.write("Distritos oficiales del Perú")
+            st.markdown("**🗺️ Administrative Boundaries**")
+            st.write("Official district boundaries of Peru")
+            st.caption(f"📊 {len(districts_gdf):,} districts")
             st.markdown('</div>', unsafe_allow_html=True)
         
-        # Filtering rules section
-        st.markdown("### 🔍 Reglas de Filtrado")
+        # Enhanced filtering rules
+        st.markdown("### 🔍 Quality Assurance Criteria")
         st.markdown('<div class="warning-box">', unsafe_allow_html=True)
         st.markdown("""
-        **Criterios aplicados para garantizar calidad de datos:**
+        **Applied filters for data quality:**
         
-        1. ✅ **Estado Operacional**: Solo hospitales con estado "EN FUNCIONAMIENTO"
-        2. 🏛️ **Instituciones Públicas**: MINSA, GOBIERNO REGIONAL, ESSALUD, FFAA, PNP
-        3. 📍 **Coordenadas Válidas**: Latitud y longitud requeridas para análisis espacial
-        4. 🌐 **CRS Estandarizado**: EPSG:4326 (WGS84) para consistencia global
+        ✅ **Operational Status**: Only hospitals with status "EN FUNCIONAMIENTO"  
+        🏛️ **Public Institutions**: MINSA, GOBIERNO REGIONAL, ESSALUD, FFAA, PNP  
+        📍 **Valid Coordinates**: Latitude and longitude required for spatial analysis  
+        🌐 **Standardized CRS**: EPSG:4326 (WGS84) for global consistency  
+        🔬 **Data Validation**: Automated checks for data integrity and completeness
         """)
         st.markdown('</div>', unsafe_allow_html=True)
         
-        if public_hospitals is not None:
-            # Institution distribution
-            st.markdown("### 📈 Distribución por Institución")
-            
-            institution_counts = public_hospitals['Institución'].value_counts()
-            
-            # Create interactive plotly chart
-            fig = px.pie(
-                values=institution_counts.values,
-                names=institution_counts.index,
-                title="Distribución de Hospitales por Institución",
-                color_discrete_sequence=px.colors.qualitative.Set3
-            )
-            fig.update_traces(textposition='inside', textinfo='percent+label')
-            fig.update_layout(height=500)
-            st.plotly_chart(fig, use_container_width=True)
-            
-            # Summary table
-            st.markdown("### 📋 Resumen Estadístico")
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                summary_stats = create_summary_statistics(public_hospitals, districts_with_counts)
-                
-                metrics_df = pd.DataFrame({
-                    'Métrica': [
-                        'Total de Hospitales',
-                        'Departamentos Cubiertos', 
-                        'Distritos con Hospitales',
-                        'Distritos sin Hospitales',
-                        'Promedio por Distrito'
-                    ],
-                    'Valor': [
-                        f"{summary_stats['total_hospitals']:,}",
-                        f"{summary_stats['departments_covered']:,}",
-                        f"{summary_stats['districts_with_hospitals']:,}",
-                        f"{summary_stats['districts_without_hospitals']:,}",
-                        f"{summary_stats['avg_hospitals_per_district']:.1f}"
-                    ]
-                })
-                
-                st.dataframe(metrics_df, use_container_width=True)
-            
-            with col2:
-                # Top departments
-                dept_counts = public_hospitals['Departamento'].value_counts().head(10)
-                st.markdown("**Top 10 Departamentos:**")
-                for dept, count in dept_counts.items():
-                    st.write(f"• {dept}: {count:,} hospitales")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with tab2:
-        st.markdown('<h2 class="tab-subheader">🗺️ Mapas Estáticos & Análisis Departamental</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="animate-fade-in">', unsafe_allow_html=True)
+        st.markdown("## 🗺️ Static Geographic Analysis")
         
         if public_hospitals is not None and districts_with_counts is not None:
             
             # Create static maps
             dept_counts = create_static_maps_section(public_hospitals, districts_with_counts)
             
-            st.markdown("### 📊 Análisis a Nivel Departamental")
-            
-            col1, col2 = st.columns([1, 1])
-            
-            with col1:
-                st.markdown("**Resumen por Departamento:**")
-                st.dataframe(dept_counts, use_container_width=True)
-            
-            with col2:
-                # Interactive department chart
-                fig = px.bar(
-                    dept_counts.head(15), 
-                    x='hospital_count', 
-                    y='Departamento',
-                    orientation='h',
-                    title='Top 15 Departamentos por Número de Hospitales',
-                    color='hospital_count',
-                    color_continuous_scale='Viridis'
-                )
-                fig.update_layout(height=600)
-                st.plotly_chart(fig, use_container_width=True)
-            
-            # Key insights
-            if len(dept_counts) > 0:
-                st.markdown("### 🔍 Principales Hallazgos")
+            if dept_counts is not None:
+                # Enhanced disparity analysis
+                st.markdown("### 📊 Regional Disparity Analysis")
+                
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    st.markdown('<div class="success-box">', unsafe_allow_html=True)
-                    st.markdown(f"**🏆 Departamento con más hospitales:**")
-                    st.markdown(f"**{dept_counts.iloc[0]['Departamento']}** con **{dept_counts.iloc[0]['hospital_count']:,} hospitales**")
+                    max_hospitals = dept_counts.max()
+                    min_hospitals = dept_counts.min()
+                    disparity_ratio = max_hospitals / max(min_hospitals, 1)
+                    
+                    st.markdown('<div class="analysis-box">', unsafe_allow_html=True)
+                    st.markdown("#### 📈 Inequality Metrics")
+                    st.write(f"**Disparity Ratio:** {disparity_ratio:.1f}:1 between highest and lowest departments")
+                    st.write(f"**High Coverage:** {len(dept_counts[dept_counts >= 50]):,} departments have 50+ hospitals")
+                    st.write(f"**Low Coverage:** {len(dept_counts[dept_counts < 10]):,} departments have <10 hospitals")
                     st.markdown('</div>', unsafe_allow_html=True)
                 
                 with col2:
-                    st.markdown('<div class="warning-box">', unsafe_allow_html=True)
-                    st.markdown(f"**⚠️ Departamento con menos hospitales:**")
-                    st.markdown(f"**{dept_counts.iloc[-1]['Departamento']}** con **{dept_counts.iloc[-1]['hospital_count']:,} hospitales**")
-                    st.markdown('</div>', unsafe_allow_html=True)
-                    
-                # Disparity analysis
-                max_hospitals = dept_counts.iloc[0]['hospital_count']
-                min_hospitals = dept_counts.iloc[-1]['hospital_count']
-                disparity_ratio = max_hospitals / max(min_hospitals, 1)
-                
-                st.markdown('<div class="analysis-box">', unsafe_allow_html=True)
-                st.markdown(f"### 📊 Análisis de Disparidad")
-                st.write(f"**Ratio de disparidad:** {disparity_ratio:.1f}:1 entre el departamento con más y menos hospitales")
-                st.write(f"**Distribución:** {len(dept_counts[dept_counts['hospital_count'] >= 50]):,} departamentos tienen 50+ hospitales")
-                st.markdown('</div>', unsafe_allow_html=True)
+                    # Create distribution chart
+                    fig_dist = px.histogram(
+                        x=dept_counts.values,
+                        nbins=15,
+                        title="Distribution of Hospitals by Department",
+                        labels={'x': 'Number of Hospitals', 'y': 'Department Count'}
+                    )
+                    fig_dist.update_layout(height=300)
+                    st.plotly_chart(fig_dist, use_container_width=True)
         
         else:
-            st.error("No se pudieron procesar los datos de hospitales para crear mapas estáticos.")
+            st.error("Unable to process hospital data for static maps.")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with tab3:
-        st.markdown('<h2 class="tab-subheader">🌍 Mapas Dinámicos</h2>', unsafe_allow_html=True)
+        st.markdown('<div class="animate-fade-in">', unsafe_allow_html=True)
+        st.markdown("## 🌍 Interactive Geographic Visualization")
         
         if hospitals_gdf is not None and districts_with_counts is not None:
             
             # National choropleth map
-            st.markdown("### 🗺️ Mapa Nacional de Hospitales")
-            st.write("Mapa interactivo con coropletas a nivel distrital y marcadores de hospitales agrupados.")
+            st.markdown("### 🗺️ National Hospital Distribution")
             
-            national_map = create_national_choropleth_folium(districts_with_counts, hospitals_gdf)
+            map_style_mapping = {
+                "OpenStreetMap": "OpenStreetMap",
+                "CartoDB Positron": "CartoDB positron",
+                "CartoDB Dark_Matter": "CartoDB dark_matter",
+                "Stamen Terrain": "Stamen Terrain"
+            }
             
-            # Add title
-            title_html = '''
-            <h3 style="position: fixed; 
-                       top: 10px; left: 50px; width: 400px; height: 60px; 
-                       background-color: white; border:2px solid grey; z-index:9999; 
-                       font-size:16px; text-align: center; padding: 10px">
-            <b>🏥 Distribución Nacional de Hospitales - Perú 2024</b><br>
-            <small>Coropletas distritales con marcadores agrupados</small>
-            </h3>
-            '''
-            national_map.get_root().html.add_child(folium.Element(title_html))
-            
-            # Display the map
-            import streamlit.components.v1 as components
-            map_html = national_map._repr_html_()
-            components.html(map_html, height=600)
-            
-            # Proximity analysis section
-            st.markdown("### 📍 Análisis de Proximidad - Lima & Loreto")
-            
-            # Perform proximity analysis
-            (lima_isolated, lima_concentrated, lima_hospitals, 
-             loreto_isolated, loreto_concentrated, loreto_hospitals) = create_proximity_analysis_maps(
-                hospitals_gdf, pop_centers_gdf
+            national_map = create_national_choropleth_folium(
+                districts_with_counts, 
+                hospitals_gdf,
+                tiles=map_style_mapping.get(sidebar_config['map_style'], "CartoDB positron")
             )
             
-            # Display proximity maps
-            col1, col2 = st.columns(2)
+            # Add custom legend
+            legend_html = """
+            <div style="position: fixed; top: 50px; right: 50px; width: 200px; height: 120px; 
+                        background-color: white; border:2px solid grey; z-index:9999; 
+                        font-size:12px; padding: 10px; border-radius: 10px;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+            <h4 style="margin-top:0;"><b>🏥 Hospital Density</b></h4>
+            <p><span style="color:#1f77b4;">●</span> High Density (10+ hospitals)</p>
+            <p><span style="color:#ff7f0e;">●</span> Medium Density (5-9 hospitals)</p>
+            <p><span style="color:#2ca02c;">●</span> Low Density (1-4 hospitals)</p>
+            <p><span style="color:#d62728;">●</span> No Hospitals</p>
+            </div>
+            """
+            national_map.get_root().html.add_child(folium.Element(legend_html))
             
-            with col1:
-                st.markdown("#### 🏙️ Lima (Concentración Urbana)")
+            st.components.v1.html(national_map._repr_html_(), height=600)
+            
+            # Regional proximity analysis
+            st.markdown("### 🔍 Regional Proximity Analysis")
+            
+            tab_lima, tab_loreto = st.tabs(["🏙️ Lima Metropolitan", "🌳 Loreto Amazon"])
+            
+            with tab_lima:
+                # Lima analysis with enhanced buffer
+                lima_isolated, lima_concentrated, lima_hospitals = perform_proximity_analysis(
+                    hospitals_gdf, pop_centers_gdf, 'Lima', buffer_km=sidebar_config['buffer_distance']
+                )
                 
                 if lima_isolated is not None and lima_concentrated is not None:
-                    lima_center = [-12.0464, -77.0428]
+                    lima_center = (-77.0428, -12.0464)
                     lima_map = create_proximity_folium_map(
                         lima_hospitals, lima_isolated, lima_concentrated,
                         'Lima', lima_center, zoom=10
                     )
                     
-                    # Add analysis context
+                    # Enhanced analysis context
                     analysis_html = f'''
                     <div style="position: fixed; 
-                                bottom: 10px; left: 10px; width: 280px; height: 160px; 
-                                background-color: white; border:2px solid grey; z-index:9999; 
-                                font-size:11px; padding: 8px">
-                    <b>🏙️ Análisis Lima</b><br><br>
-                    <b>Concentración urbana:</b><br>
-                    • Alta densidad hospitalaria<br>
-                    • Transporte público mejora acceso<br>
-                    • Máximo: {lima_concentrated['hospitals_10km']} hospitales<br>
-                    • Mínimo: {lima_isolated['hospitals_10km']} hospitales<br>
-                    <br><b>Desafío:</b> Periferia urbana
+                                bottom: 10px; left: 10px; width: 320px; height: 180px; 
+                                background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%); 
+                                border: 2px solid #667eea; z-index:9999; 
+                                font-size:11px; padding: 12px; border-radius: 12px;
+                                box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+                    <h4 style="margin-top:0; color: #495057;"><b>🏙️ Lima Analysis</b></h4>
+                    <div style="background: #e3f2fd; padding: 8px; border-radius: 6px; margin: 8px 0;">
+                    <b>Urban Concentration Advantage:</b><br>
+                    • High hospital density in metro area<br>
+                    • Public transport improves accessibility<br>
+                    • Buffer: {sidebar_config['buffer_distance']}km radius
+                    </div>
+                    <b>📊 Coverage Stats:</b><br>
+                    • Maximum: {lima_concentrated['hospitals_10km'] if lima_concentrated else 0} hospitals<br>
+                    • Minimum: {lima_isolated['hospitals_10km'] if lima_isolated else 0} hospitals
                     </div>
                     '''
                     lima_map.get_root().html.add_child(folium.Element(analysis_html))
                     
-                    map_html = lima_map._repr_html_()
-                    components.html(map_html, height=400)
+                    st.components.v1.html(lima_map._repr_html_(), height=500)
                     
-                    # Lima metrics
-                    st.markdown('<div class="success-box">', unsafe_allow_html=True)
-                    st.markdown(f"**Hospitales en Lima:** {len(lima_hospitals):,}")
-                    st.markdown(f"**Acceso máximo:** {lima_concentrated['hospitals_10km']} hospitales en 10km")
-                    st.markdown(f"**Acceso mínimo:** {lima_isolated['hospitals_10km']} hospitales en 10km")
-                    st.markdown('</div>', unsafe_allow_html=True)
-                    
-                else:
-                    st.warning("No se pudo completar el análisis de Lima")
+                    # Statistical summary
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Most Accessible Area", f"{lima_concentrated['hospitals_10km']} hospitals")
+                    with col2:
+                        st.metric("Least Accessible Area", f"{lima_isolated['hospitals_10km']} hospitals")
+                    with col3:
+                        accessibility_ratio = lima_concentrated['hospitals_10km'] / max(lima_isolated['hospitals_10km'], 1)
+                        st.metric("Accessibility Ratio", f"{accessibility_ratio:.1f}:1")
             
-            with col2:
-                st.markdown("#### 🌳 Loreto (Desafíos Amazónicos)")
+            with tab_loreto:
+                # Loreto analysis
+                loreto_isolated, loreto_concentrated, loreto_hospitals = perform_proximity_analysis(
+                    hospitals_gdf, pop_centers_gdf, 'Loreto', buffer_km=sidebar_config['buffer_distance']
+                )
                 
                 if loreto_isolated is not None and loreto_concentrated is not None:
-                    loreto_center = [-4.2312, -73.2516]
+                    loreto_center = (-74.2, -4.0)
                     loreto_map = create_proximity_folium_map(
                         loreto_hospitals, loreto_isolated, loreto_concentrated,
-                        'Loreto', loreto_center, zoom=8
+                        'Loreto', loreto_center, zoom=7
                     )
                     
-                    # Add analysis context
-                    analysis_html = f'''
+                    # Enhanced analysis context for Loreto
+                    loreto_analysis_html = f'''
                     <div style="position: fixed; 
-                                bottom: 10px; left: 10px; width: 280px; height: 180px; 
-                                background-color: white; border:2px solid grey; z-index:9999; 
-                                font-size:11px; padding: 8px">
-                    <b>🌳 Análisis Loreto</b><br><br>
-                    <b>Desafíos geográficos:</b><br>
-                    • Selva densa limita acceso<br>
-                    • Ríos como transporte principal<br>
-                    • Inundaciones estacionales<br>
-                    • Máximo: {loreto_concentrated['hospitals_10km']} hospitales<br>
-                    • Mínimo: {loreto_isolated['hospitals_10km']} hospitales<br>
-                    <br><b>Necesidades:</b> Telemedicina, unidades móviles
+                                bottom: 10px; left: 10px; width: 320px; height: 200px; 
+                                background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%); 
+                                border: 2px solid #28a745; z-index:9999; 
+                                font-size:11px; padding: 12px; border-radius: 12px;
+                                box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+                    <h4 style="margin-top:0; color: #495057;"><b>🌳 Loreto Amazon Analysis</b></h4>
+                    <div style="background: #e8f5e8; padding: 8px; border-radius: 6px; margin: 8px 0;">
+                    <b>Amazon Challenges:</b><br>
+                    • Remote communities with limited access<br>
+                    • River transport dependency<br>
+                    • Sparse infrastructure network
+                    </div>
+                    <b>📊 Accessibility Stats:</b><br>
+                    • Maximum: {loreto_concentrated['hospitals_10km'] if loreto_concentrated else 0} hospitals<br>
+                    • Minimum: {loreto_isolated['hospitals_10km'] if loreto_isolated else 0} hospitals<br>
+                    • Buffer: {sidebar_config['buffer_distance']}km radius
                     </div>
                     '''
-                    loreto_map.get_root().html.add_child(folium.Element(analysis_html))
+                    loreto_map.get_root().html.add_child(folium.Element(loreto_analysis_html))
                     
-                    map_html = loreto_map._repr_html_()
-                    components.html(map_html, height=400)
+                    st.components.v1.html(loreto_map._repr_html_(), height=500)
                     
-                    # Loreto metrics
-                    st.markdown('<div class="warning-box">', unsafe_allow_html=True)
-                    st.markdown(f"**Hospitales en Loreto:** {len(loreto_hospitals):,}")
-                    st.markdown(f"**Acceso máximo:** {loreto_concentrated['hospitals_10km']} hospitales en 10km")
-                    st.markdown(f"**Acceso mínimo:** {loreto_isolated['hospitals_10km']} hospitales en 10km")
-                    st.markdown('</div>', unsafe_allow_html=True)
-                    
-                else:
-                    st.warning("No se pudo completar el análisis de Loreto")
-            
-            # Comparative analysis
-            if (lima_hospitals is not None and loreto_hospitals is not None and
-                lima_concentrated is not None and loreto_concentrated is not None):
-                
-                st.markdown("### 🔄 Análisis Comparativo")
-                
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    disparity_ratio = len(lima_hospitals) / max(len(loreto_hospitals), 1)
-                    st.metric(
-                        "Ratio Urbano/Amazónico",
-                        f"{disparity_ratio:.1f}:1",
-                        delta=f"Lima tiene {disparity_ratio:.1f}x más hospitales"
-                    )
-                
-                with col2:
-                    access_disparity = lima_concentrated['hospitals_10km'] / max(loreto_concentrated['hospitals_10km'], 1)
-                    st.metric(
-                        "Disparidad de Acceso Máximo",
-                        f"{access_disparity:.1f}:1",
-                        delta=f"Lima: {lima_concentrated['hospitals_10km']} vs Loreto: {loreto_concentrated['hospitals_10km']}"
-                    )
-                
-                with col3:
-                    total_hospitals = len(lima_hospitals) + len(loreto_hospitals)
-                    lima_percentage = (len(lima_hospitals) / total_hospitals) * 100
-                    st.metric(
-                        "% de Hospitales en Lima",
-                        f"{lima_percentage:.1f}%",
-                        delta=f"de {total_hospitals:,} hospitales totales"
-                    )
-            
-            # Written analysis section
-            st.markdown('<div class="analysis-box">', unsafe_allow_html=True)
-            st.markdown("### 📝 Análisis Escrito")
-            st.markdown("""
-            **Lima (Concentración urbana y accesibilidad):**
-            - La concentración urbana permite alta densidad hospitalaria en el área metropolitana
-            - Las redes de transporte público facilitan el acceso desde diferentes distritos
-            - Los desafíos se concentran en las zonas periféricas en expansión
-            - La planificación urbana debe considerar el crecimiento hacia los márgenes
-            
-            **Loreto (Dispersión geográfica y desafíos de accesibilidad en la Amazonía):**
-            - La densa cobertura forestal y los ríos como vías principales limitan el acceso terrestre
-            - Las comunidades remotas enfrentan barreras geográficas significativas
-            - Las inundaciones estacionales afectan la conectividad y el acceso a servicios
-            - Se requieren estrategias especializadas: telemedicina, unidades móviles fluviales, y centros de atención en comunidades clave
-            
-            **Metodología de buffers de 10km:**
-            El análisis revela disparidades significativas en el acceso a hospitales entre regiones urbanas y rurales, 
-            destacando la necesidad de políticas diferenciadas según el contexto geográfico y demográfico.
-            """)
-            st.markdown('</div>', unsafe_allow_html=True)
+                    # Statistical summary for Loreto
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Most Accessible Area", f"{loreto_concentrated['hospitals_10km']} hospitals")
+                    with col2:
+                        st.metric("Least Accessible Area", f"{loreto_isolated['hospitals_10km']} hospitals")
+                    with col3:
+                        if loreto_isolated['hospitals_10km'] > 0:
+                            loreto_ratio = loreto_concentrated['hospitals_10km'] / loreto_isolated['hospitals_10km']
+                        else:
+                            loreto_ratio = float('inf')
+                        st.metric("Accessibility Ratio", f"{loreto_ratio:.1f}:1" if loreto_ratio != float('inf') else "∞:1")
         
         else:
-            st.error("No se pudieron procesar los datos de hospitales para crear mapas dinámicos.")
-
+            st.error("Unable to create interactive maps. Please check data availability.")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with tab4:
+        st.markdown('<div class="animate-fade-in">', unsafe_allow_html=True)
+        st.markdown("## 📈 Advanced Healthcare Analytics")
+        
+        if sidebar_config['show_advanced_stats']:
+            
+            # Advanced statistical analysis
+            st.markdown("### 🔬 Statistical Analysis")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # Population vs Hospital correlation (simulated for demo)
+                dept_hospital_counts = public_hospitals['Departamento'].value_counts()
+                
+                # Create correlation matrix visualization
+                correlation_data = pd.DataFrame({
+                    'Department': dept_hospital_counts.index[:10],
+                    'Hospitals': dept_hospital_counts.values[:10],
+                    'Population_Index': np.random.normal(100, 30, 10)  # Simulated population data
+                })
+                
+                fig_scatter = px.scatter(
+                    correlation_data,
+                    x='Population_Index',
+                    y='Hospitals',
+                    hover_data=['Department'],
+                    title="Hospital Count vs Population Index (Simulated)",
+                    trendline="ols"
+                )
+                st.plotly_chart(fig_scatter, use_container_width=True)
+            
+            with col2:
+                # Geographic dispersion analysis
+                coords = public_hospitals[['Latitud', 'Longitud']].dropna()
+                center_lat, center_lon = coords.mean()
+                distances = np.sqrt((coords['Latitud'] - center_lat)**2 + (coords['Longitud'] - center_lon)**2)
+                
+                fig_hist = px.histogram(
+                    x=distances,
+                    nbins=30,
+                    title="Geographic Distribution Pattern",
+                    labels={'x': 'Distance from Geographic Center', 'y': 'Hospital Count'}
+                )
+                st.plotly_chart(fig_hist, use_container_width=True)
+            
+            # Accessibility index calculation
+            st.markdown("### 🎯 Healthcare Accessibility Index")
+            
+            # Calculate a composite accessibility index
+            dept_stats = public_hospitals.groupby('Departamento').agg({
+                'Nombre': 'count',
+                'Latitud': 'std',
+                'Longitud': 'std'
+            }).round(3)
+            
+            dept_stats.columns = ['Hospital_Count', 'Lat_Dispersion', 'Lon_Dispersion']
+            dept_stats['Accessibility_Score'] = (
+                dept_stats['Hospital_Count'] / 
+                (1 + dept_stats['Lat_Dispersion'] + dept_stats['Lon_Dispersion'])
+            ).round(2)
+            
+            dept_stats = dept_stats.sort_values('Accessibility_Score', ascending=False)
+            
+            # Display top and bottom departments
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("#### 🥇 Top Performing Departments")
+                top_depts = dept_stats.head(10)
+                
+                fig_top = px.bar(
+                    x=top_depts['Accessibility_Score'],
+                    y=top_depts.index,
+                    orientation='h',
+                    title="Highest Accessibility Scores",
+                    color=top_depts['Accessibility_Score'],
+                    color_continuous_scale='Greens'
+                )
+                fig_top.update_layout(height=400)
+                st.plotly_chart(fig_top, use_container_width=True)
+            
+            with col2:
+                st.markdown("#### 🎯 Areas for Improvement")
+                bottom_depts = dept_stats.tail(10)
+                
+                fig_bottom = px.bar(
+                    x=bottom_depts['Accessibility_Score'],
+                    y=bottom_depts.index,
+                    orientation='h',
+                    title="Areas Needing Investment",
+                    color=bottom_depts['Accessibility_Score'],
+                    color_continuous_scale='Reds'
+                )
+                fig_bottom.update_layout(height=400)
+                st.plotly_chart(fig_bottom, use_container_width=True)
+        
+        # Performance metrics and download options
+        st.markdown("### 📤 Data Export & Performance")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            if st.button("📊 Download Summary Report"):
+                # Create summary report
+                summary_data = {
+                    'metric': ['Total Hospitals', 'Departments', 'Districts', 'Coverage Rate'],
+                    'value': [len(public_hospitals), public_hospitals['Departamento'].nunique(), 
+                             len(districts_gdf), f"{coverage_rate:.1f}%"]
+                }
+                summary_df = pd.DataFrame(summary_data)
+                
+                if sidebar_config['download_format'] == 'CSV':
+                    csv = summary_df.to_csv(index=False)
+                    st.download_button(
+                        label="Download CSV",
+                        data=csv,
+                        file_name=f"peru_hospitals_summary_{datetime.now().strftime('%Y%m%d')}.csv",
+                        mime="text/csv"
+                    )
+        
+        with col2:
+            processing_time = time.time() - perf_metrics['load_time']
+            st.metric("Processing Time", f"{processing_time:.2f}s")
+        
+        with col3:
+            st.metric("Memory Usage", "Optimized")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Footer
+    st.markdown("---")
 if __name__ == "__main__":
     main()

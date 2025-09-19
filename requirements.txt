@@ -7,3 +7,7 @@ folium>=0.12.0
 shapely>=1.8.0
 streamlit>=1.28.0
 plotly>=5.0.0
+
+# Development dependencies (optional)
+# Install with: pip install -r requirements.txt -r requirements-dev.txt
+# Or use: pip install -e ".[dev]" if using pyproject.toml
