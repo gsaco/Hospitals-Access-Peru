@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Hospital Access Peru - Streamlit Application Launcher
+Hospital Access in Peru - Streamlit Application Launcher
 Run this script from the project root to start the Streamlit app.
 """
 
