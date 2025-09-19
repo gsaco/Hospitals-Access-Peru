@@ -17,7 +17,7 @@
 
 ## 🌟 Overview
 
-This repository provides a **world-class, professional geospatial analysis platform** for examining hospital accessibility across Peru. Built with modern data science tools and following industry best practices, it delivers actionable insights into healthcare infrastructure distribution and accessibility patterns.
+This repository provides a **geospatial analysis platform** for examining hospital accessibility across Peru. Built with modern data science tools and following industry best practices, it delivers actionable insights into healthcare infrastructure distribution and accessibility patterns.
 
 ### ✨ Key Features
 
