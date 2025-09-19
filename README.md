@@ -7,7 +7,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
 
-*A comprehensive, professional-grade geospatial analysis platform for healthcare infrastructure accessibility in Peru*
+*A geospatial analysis platform for healthcare infrastructure accessibility in Peru*
 
 [🚀 **Live Demo**](#getting-started) | [📖 **Documentation**](#documentation) | [🤝 **Contributing**](#contributing) | [📊 **Screenshots**](#screenshots)
 
