@@ -31,48 +31,124 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for styling
+# Professional CSS styling for enhanced dashboard
 st.markdown("""
 <style>
+    /* Import Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    /* Global styling */
+    .stApp {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    /* Header styling */
     .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #1f77b4;
+        font-size: 3rem;
+        font-weight: 700;
+        color: #1f2937;
         text-align: center;
         margin-bottom: 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
+    
     .tab-subheader {
-        font-size: 1.8rem;
-        font-weight: bold;
-        color: #ff7f0e;
-        margin-bottom: 1rem;
+        font-size: 2rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 0.5rem;
     }
+    
+    /* Enhanced metric cards */
     .metric-card {
-        background-color: #f0f2f6;
-        padding: 1rem;
-        border-radius: 10px;
-        margin: 0.5rem 0;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin: 0.75rem 0;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
+    
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Info boxes with improved design */
     .analysis-box {
-        background-color: #e8f4f8;
-        padding: 1rem;
-        border-left: 4px solid #1f77b4;
-        border-radius: 5px;
-        margin: 1rem 0;
+        background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
+        padding: 1.5rem;
+        border-left: 4px solid #3b82f6;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
     }
+    
     .warning-box {
-        background-color: #fff3cd;
-        padding: 1rem;
-        border-left: 4px solid #ffc107;
-        border-radius: 5px;
-        margin: 1rem 0;
+        background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 30%, #fef3c7 100%);
+        padding: 1.5rem;
+        border-left: 4px solid #f59e0b;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        box-shadow: 0 2px 4px rgba(245, 158, 11, 0.1);
     }
+    
     .success-box {
-        background-color: #d4edda;
-        padding: 1rem;
-        border-left: 4px solid #28a745;
-        border-radius: 5px;
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 50%, #d1fae5 100%);
+        padding: 1.5rem;
+        border-left: 4px solid #10b981;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
+    }
+    
+    /* Data source cards */
+    .data-source-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         margin: 1rem 0;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .data-source-card:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+    
+    /* Enhanced sidebar */
+    .sidebar .sidebar-content {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+    
+    /* Tab styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    /* Footer */
+    .footer {
+        margin-top: 3rem;
+        padding: 2rem 0;
+        text-align: center;
+        color: #6b7280;
+        border-top: 1px solid #e5e7eb;
+        font-size: 0.9rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -175,14 +251,65 @@ def create_proximity_analysis_maps(hospitals_gdf, pop_centers_gdf):
 
 # Main application
 def main():
+    # Professional sidebar with project info
+    with st.sidebar:
+        st.markdown("## 🏥 Project Overview")
+        st.markdown("""
+        **Comprehensive geospatial analysis** of hospital accessibility across Peru using official government data.
+        """)
+        
+        st.markdown("### 📊 Key Metrics")
+        # This will be populated after data loading
+        
+        st.markdown("### 🔗 Quick Navigation")
+        st.markdown("""
+        - 🗂️ **Data Overview**: Explore datasets and methodology
+        - 🗺️ **Static Analysis**: Maps and statistical insights  
+        - 🌍 **Interactive Maps**: Dynamic visualizations
+        """)
+        
+        st.markdown("### 📋 Data Sources")
+        st.markdown("""
+        - **MINSA**: Hospital registry (IPRESS)
+        - **INEI**: Population centers
+        - **IGN**: Administrative boundaries
+        """)
+        
+        st.markdown("### ⚙️ Analysis Features")
+        st.markdown("""
+        - ✅ Operational status filtering
+        - 📍 Coordinate validation
+        - 🎯 10km proximity analysis
+        - 📈 Department-level statistics
+        """)
+        
+        st.markdown("---")
+        st.markdown("*Professional geospatial analysis dashboard*")
+    
+    # Main header with enhanced styling
     st.markdown('<h1 class="main-header">🏥 Hospitals Access Peru - Geospatial Analysis</h1>', unsafe_allow_html=True)
     
     # Load all data
     hospitals_df, districts_gdf, pop_centers_gdf, public_hospitals, hospitals_gdf, districts_with_counts = load_all_data()
     
     if hospitals_df is None:
-        st.error("Unable to load data. Please check that all required files are present.")
-        return
+        st.error("❌ Unable to load data. Please check that all required files are present.")
+        st.stop()
+        
+    # Update sidebar with actual metrics
+    with st.sidebar:
+        if public_hospitals is not None:
+            st.markdown("### 📊 Current Statistics")
+            st.metric("🏥 Total Hospitals", f"{len(public_hospitals):,}")
+            st.metric("🗺️ Departments", f"{public_hospitals['Departamento'].nunique()}")
+            if districts_with_counts is not None:
+                districts_with_hosp = len(districts_with_counts[districts_with_counts['hospital_count'] > 0])
+                st.metric("📍 Districts with Hospitals", f"{districts_with_hosp:,}")
+        
+        st.markdown("### 🎯 Quality Indicators")
+        if public_hospitals is not None:
+            coverage_pct = (districts_with_hosp / len(districts_with_counts) * 100) if districts_with_counts is not None else 0
+            st.metric("📊 District Coverage", f"{coverage_pct:.1f}%")
     
     # Create tabs with icons as shown in the homework
     tab1, tab2, tab3 = st.tabs([
@@ -244,27 +371,33 @@ def main():
         st.write("**Hospitales públicos operacionales en Perú**")
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Data sources section
+        # Data sources section with enhanced styling
         st.markdown("### 📊 Fuentes de Datos")
         
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown('<div class="success-box">', unsafe_allow_html=True)
-            st.markdown("**MINSA – IPRESS**")
-            st.write("Registro Nacional de establecimientos de salud operacionales")
+            st.markdown('<div class="data-source-card">', unsafe_allow_html=True)
+            st.markdown("### 🏥 MINSA – IPRESS")
+            st.markdown("**Registro Nacional de Establecimientos de Salud**")
+            st.markdown("Datos operacionales actualizados de hospitales públicos")
+            st.markdown("🎯 **Cobertura**: Nacional")
             st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
-            st.markdown('<div class="success-box">', unsafe_allow_html=True)
-            st.markdown("**INEI – Centros Poblados**")
-            st.write("Base de datos de centros poblados del Perú")
+            st.markdown('<div class="data-source-card">', unsafe_allow_html=True)
+            st.markdown("### 🌍 INEI – Centros Poblados")
+            st.markdown("**Base de Datos Geográfica**")
+            st.markdown("Centros poblados y asentamientos del Perú")
+            st.markdown("🎯 **Escala**: 1:100,000")
             st.markdown('</div>', unsafe_allow_html=True)
         
         with col3:
-            st.markdown('<div class="success-box">', unsafe_allow_html=True)
-            st.markdown("**Límites Administrativos**")
-            st.write("Distritos oficiales del Perú")
+            st.markdown('<div class="data-source-card">', unsafe_allow_html=True)
+            st.markdown("### 🗺️ Límites Administrativos")
+            st.markdown("**División Territorial Oficial**")
+            st.markdown("Distritos, provincias y departamentos")
+            st.markdown("🎯 **Precisión**: Oficial IGN")
             st.markdown('</div>', unsafe_allow_html=True)
         
         # Filtering rules section
@@ -570,6 +703,17 @@ def main():
         
         else:
             st.error("No se pudieron procesar los datos de hospitales para crear mapas dinámicos.")
+    
+    # Professional footer
+    st.markdown("---")
+    st.markdown("""
+    <div class="footer">
+        <p><strong>🏥 Hospitals Access Peru - Geospatial Analysis</strong></p>
+        <p>Professional analysis of healthcare accessibility using official government data sources</p>
+        <p>Built with Streamlit • GeoPandas • Folium • Plotly</p>
+        <p><em>Data sources: MINSA (IPRESS) • INEI (Population Centers) • IGN (Administrative Boundaries)</em></p>
+    </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
