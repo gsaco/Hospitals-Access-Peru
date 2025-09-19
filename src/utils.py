@@ -10,6 +10,7 @@ import folium
 from folium import plugins
 from shapely.geometry import Point
 import warnings
+import os
 warnings.filterwarnings('ignore')
 
 def load_and_clean_data():
@@ -21,16 +22,20 @@ def load_and_clean_data():
     """
     print("🔄 Loading datasets...")
     
+    # Get the directory containing this file
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(os.path.dirname(current_dir), 'data')
+    
     # Load hospitals data
-    hospitals_df = pd.read_csv('IPRESS.csv', encoding='latin-1')
+    hospitals_df = pd.read_csv(os.path.join(data_dir, 'IPRESS.csv'), encoding='latin-1')
     print(f"✓ Hospitals dataset loaded: {hospitals_df.shape}")
     
     # Load districts shapefile
-    districts_gdf = gpd.read_file('DISTRITOS.shp')
+    districts_gdf = gpd.read_file(os.path.join(data_dir, 'DISTRITOS.shp'))
     print(f"✓ Districts shapefile loaded: {districts_gdf.shape}")
     
     # Load population centers shapefile
-    pop_centers_gdf = gpd.read_file('CCPP_IGN100K.shp')
+    pop_centers_gdf = gpd.read_file(os.path.join(data_dir, 'CCPP_IGN100K.shp'))
     print(f"✓ Population centers loaded: {pop_centers_gdf.shape}")
     
     # Standardize CRS to EPSG:4326
@@ -122,13 +127,14 @@ def spatial_join_hospitals_districts(hospitals_gdf, districts_gdf):
     
     return districts_with_counts
 
-def create_choropleth_map(districts_with_counts, title="Hospital Distribution by District"):
+def create_choropleth_map(districts_with_counts, title="Hospital Distribution by District", save_to_assets=True):
     """
     Create a professional choropleth map of hospital distribution.
     
     Args:
         districts_with_counts: GeoDataFrame with hospital counts
         title: Map title
+        save_to_assets: Whether to save the map to assets directory
     
     Returns:
         matplotlib figure
@@ -160,6 +166,23 @@ def create_choropleth_map(districts_with_counts, title="Hospital Distribution by
     ax.set_yticks([])
     
     plt.tight_layout()
+    
+    # Save to assets directory if requested
+    if save_to_assets:
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            assets_dir = os.path.join(os.path.dirname(current_dir), 'assets')
+            os.makedirs(assets_dir, exist_ok=True)
+            
+            # Create filename from title
+            filename = title.lower().replace(' ', '_').replace('-', '_') + '.png'
+            filepath = os.path.join(assets_dir, filename)
+            
+            plt.savefig(filepath, dpi=300, bbox_inches='tight', facecolor='white')
+            print(f"✓ Map saved to: {filepath}")
+        except Exception as e:
+            print(f"⚠️ Could not save map: {str(e)}")
+    
     return fig
 
 def perform_proximity_analysis(hospitals_gdf, pop_centers_gdf, department, buffer_km=10):
