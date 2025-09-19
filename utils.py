@@ -177,9 +177,9 @@ def perform_proximity_analysis(hospitals_gdf, pop_centers_gdf, department, buffe
     """
     print(f"\n🔄 Analyzing proximity for {department}...")
     
-    # Filter data for the department
+    # Filter data for the department - use DEP column for department
     dept_hospitals = hospitals_gdf[hospitals_gdf['Departamento'] == department.upper()].copy()
-    dept_pop_centers = pop_centers_gdf[pop_centers_gdf['CCDD'] == get_department_code(department)].copy()
+    dept_pop_centers = pop_centers_gdf[pop_centers_gdf['DEP'] == department.upper()].copy()
     
     if len(dept_hospitals) == 0:
         print(f"❌ No hospitals found for {department}")
@@ -210,8 +210,8 @@ def perform_proximity_analysis(hospitals_gdf, pop_centers_gdf, department, buffe
             'center_id': idx,
             'geometry': center.geometry,
             'hospitals_10km': hospital_count,
-            'nome': center.get('NOME', 'Unknown'),
-            'ccpp': center.get('CCPP', 'Unknown')
+            'nome': center.get('NOM_POBLAD', 'Unknown'),
+            'ccpp': center.get('CÓDIGO', 'Unknown')
         })
     
     proximity_df = pd.DataFrame(proximity_results)
